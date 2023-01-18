@@ -21,6 +21,10 @@ export default class NewClass extends cc.Component {
 
     }
 
+    test(){
+        this.roomNet.close();
+    }
+
     connectRoom(onSucc?: Function, onFail?: Function) {
         const onSuccess = () => {
             this.initHandler()
@@ -53,6 +57,8 @@ export default class NewClass extends cc.Component {
 
     initHandler() {
         this.roomNet.addHandler("room_result", (data) => {
+            if(uglobal.game)
+                return;
             console.debug(data);
             uglobal.room.data = data.data;
             const all_seat = cc.find("Canvas/seats").children;
