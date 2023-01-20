@@ -18,9 +18,9 @@ export default class NewClass extends cc.Component {
         text: string,
         [propName: string]: any
     };
-    seats:{
-        [propName: string]:any
-    }={};
+    seats: {
+        [propName: string]: any
+    } = {};
 
     // LIFE-CYCLE CALLBACKS:
 
@@ -29,8 +29,8 @@ export default class NewClass extends cc.Component {
     start() {
         let all_seats = cc.find("Canvas/seats").children;
         let now_pos = uglobal.room.position;
-        for (let i of all_seats){
-            if(now_pos >= uglobal.room.num_of_people)
+        for (let i of all_seats) {
+            if (now_pos >= uglobal.room.num_of_people)
                 now_pos = 0;
             this.seats[now_pos] = i.name;
             now_pos++;
@@ -77,27 +77,27 @@ export default class NewClass extends cc.Component {
             /* 判断从手牌哪个位置开始更新 */
             let holds_children = cc.find("Canvas/seats/me/holds").children;
             let start_index: number;
-            for (let i=0; i < holds_children.length; i++) {
+            for (let i = 0; i < holds_children.length; i++) {
                 if (holds_children[i].children.length > 0) {
                     start_index = i;
                     break;
                 }
             }
             /* 清除所有手牌 */
-            for(let i of holds_children){
+            for (let i of holds_children) {
                 i.removeAllChildren();
             }
             /* 刷新手牌 */
-            for(let i=0; i<holds.length;i++){
+            for (let i = 0; i < holds.length; i++) {
                 cc.loader.loadRes("prefabs/card", cc.Prefab, (err, pf) => {
                     if (err) {
                         console.debug(err);
                         return;
                     }
-                    for(let j in holds[i]){
+                    for (let j in holds[i]) {
                         let new_node = cc.instantiate(pf);
                         new_node.getComponent("card").cardId = holds[i][j];
-                        new_node.parent = holds_children[start_index+i];
+                        new_node.parent = holds_children[start_index + i];
                         new_node.x = 0;
                         if (j == "0")
                             new_node.y = -85;
@@ -153,8 +153,8 @@ export default class NewClass extends cc.Component {
         console.debug(deck);
         const data = {
             deck,
-            gameid:this.gameData.gameid,
-            position:uglobal.room.position
+            gameid: this.gameData.gameid,
+            position: uglobal.room.position
         }
         this.gameNet.send("zipai_update_deck", data);
     }
@@ -231,22 +231,22 @@ export default class NewClass extends cc.Component {
                         anim_component.getComponent(cc.Sprite).spriteFrame = sa.getSpriteFrame("")
                         break;
                     case 3:
-                        anim_component.getComponent(cc.Sprite).spriteFrame = sa.getSpriteFrame("")
+                        anim_component.getComponent(cc.Sprite).spriteFrame = sa.getSpriteFrame("zpao_room");
                         break;
                     case 4:
-                        anim_component.getComponent(cc.Sprite).spriteFrame = sa.getSpriteFrame("zpeng_room")
+                        anim_component.getComponent(cc.Sprite).spriteFrame = sa.getSpriteFrame("zpeng_room");
                         break;
                     case 5:
                         anim_component.getComponent(cc.Sprite).spriteFrame = sa.getSpriteFrame("zchi_room");
                         break;
                     case 6:
-                        anim_component.getComponent(cc.Sprite).spriteFrame = sa.getSpriteFrame("")
+                        anim_component.getComponent(cc.Sprite).spriteFrame = sa.getSpriteFrame("");
                         break;
                     case 7:
-                        anim_component.getComponent(cc.Sprite).spriteFrame = sa.getSpriteFrame("")
+                        anim_component.getComponent(cc.Sprite).spriteFrame = sa.getSpriteFrame("zti_room");
                         break;
                     case 8:
-                        anim_component.getComponent(cc.Sprite).spriteFrame = sa.getSpriteFrame("")
+                        anim_component.getComponent(cc.Sprite).spriteFrame = sa.getSpriteFrame("zwei_room");
                         break;
                 }
                 anim_component.active = true;
@@ -262,19 +262,29 @@ export default class NewClass extends cc.Component {
                     console.debug(err);
                     return;
                 }
+                cc.find("Canvas/now").position = cc.v3(0, 120);
                 cc.find("Canvas/now").getComponent(cc.Sprite).spriteFrame = sa.getSpriteFrame(pai);
-                cc.find("Canvas/now").active = true;
                 let action;
                 console.debug(uglobal.game);
                 console.debug(this.seats[uglobal.game.positionIndex]);
-                if(this.seats[uglobal.game.positionIndex] == "me"){
-                    action=cc.moveBy(.2,0,-80);
-                }else if(this.seats[uglobal.game.positionIndex] == "left"){
-                    action=cc.moveBy(.2,-80,0);
-                }else if(this.seats[uglobal.game.positionIndex] == "right"){
-                    action=cc.moveBy(.2,80,0);
+                if (this.seats[uglobal.game.positionIndex] == "me") {
+                    action = cc.moveBy(.1, 0, -100);
+                    cc.find("Canvas/now").active = false;
+                    cc.find("Canvas/now").runAction(action);
+                    action = cc.moveBy(.1, 0, 100);
+                } else if (this.seats[uglobal.game.positionIndex] == "left") {
+                    action = cc.moveBy(.1, -100, 0);
+                    cc.find("Canvas/now").active = false;
+                    cc.find("Canvas/now").runAction(action);
+                    action = cc.moveBy(.1, 100, 0);
+                } else if (this.seats[uglobal.game.positionIndex] == "right") {
+                    action = cc.moveBy(.1, 100, 0);
+                    cc.find("Canvas/now").runAction(action);
+                    cc.find("Canvas/now").active = false;
+                    action = cc.moveBy(.1, -100, 0);
                 }
-                cc.find("Canvas/now").runAction(action);
+                cc.find("Canvas/now").active = true;
+
             })
         });
         this.gameNet.addHandler("zipai_update_data", data => {
@@ -288,19 +298,35 @@ export default class NewClass extends cc.Component {
             this.game_update();
         });
         this.gameNet.addHandler("zipai_next_mopai", data => {
+
             console.debug(data);
             uglobal.game = data.data.gameInfo;
             this.game_update();
-            cc.loader.loadRes("textures/mix/zipai_long",cc.SpriteAtlas,(err,sa)=>{
-                if(err){
+            cc.loader.loadRes("textures/mix/zipai_long", cc.SpriteAtlas, (err, sa) => {
+                if (err) {
                     console.debug(err);
                     return;
                 }
+                cc.find("Canvas/now").position = cc.v3(0, 120);
                 cc.find("Canvas/now").getComponent(cc.Sprite).spriteFrame = sa.getSpriteFrame(data.data.paiid);
-            })
-            this.gameNet.send("zipai_mopai",this.gameData.gameid);
+                let action;
+                if (this.seats[uglobal.game.positionIndex] == "me") {
+                    action = cc.moveBy(.1, 0, -120);
+                } else if (this.seats[uglobal.game.positionIndex] == "left") {
+                    action = cc.moveBy(.1, -120, 0);
+                } else if (this.seats[uglobal.game.positionIndex] == "right") {
+                    action = cc.moveBy(.1, 120, 0);
+                }
+                cc.find("Canvas/now").runAction(action);
+            });
+            if (data.data.position == uglobal.room.position) {
+                setTimeout(()=>{
+                    this.gameNet.send("zipai_mopai", this.gameData.gameid);
+                },600);
+            };
+
         });
-        
+
         this.gameNet.addHandler("zipai_operation_all", data => {
             console.debug(data);
 
