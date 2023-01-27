@@ -1,5 +1,5 @@
-var INIT_URL = "http://192.168.6.202:9000";
-var URL = "http://192.168.6.202:9000";
+var INIT_URL = "http://127.0.0.1:9500";
+var URL = "http://127.0.0.1:9500";
 
 function post(path,data,handler){
     var xhr = cc.loader.getXMLHttpRequest();
